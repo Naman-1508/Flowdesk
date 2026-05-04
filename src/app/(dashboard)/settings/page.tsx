@@ -11,18 +11,34 @@ import { api } from "@convex/_generated/api";
 export default function SettingsPage() {
   const { data: authSession } = useSession();
   const userId = authSession?.user?.id as any;
+  const user = useQuery(api.users.getUser, userId ? { userId } : "skip");
   const updateSettings = useMutation(api.users.updateSettings);
 
   const [defaultSessionMins, setDefaultSessionMins] = useState(25);
   const [defaultTotalSessions, setDefaultTotalSessions] = useState(4);
-  const [slackConnected, setSlackConnected] = useState(false);
+  const [slackToken, setSlackToken] = useState("");
   const [saving, setSaving] = useState(false);
+
+  // Sync state with DB when user loads
+  import { useEffect } from "react";
+  useEffect(() => {
+    if (user) {
+      if (user.defaultSessionMins) setDefaultSessionMins(user.defaultSessionMins);
+      if (user.defaultTotalSessions) setDefaultTotalSessions(user.defaultTotalSessions);
+      if (user.slackToken) setSlackToken(user.slackToken);
+    }
+  }, [user]);
 
   const handleSave = async () => {
     if (!userId) return;
     setSaving(true);
     try {
-      await updateSettings({ userId, defaultSessionMins, defaultTotalSessions });
+      await updateSettings({ 
+        userId, 
+        defaultSessionMins, 
+        defaultTotalSessions,
+        slackToken: slackToken || undefined
+      });
     } finally {
       setSaving(false);
     }
@@ -71,22 +87,37 @@ export default function SettingsPage() {
                 <MessageSquare size={20} className="text-text" />
               </div>
               <div>
-                <h3 className="font-syne font-bold text-lg">MessageSquare Status</h3>
+                <h3 className="font-syne font-bold text-lg">Slack Status</h3>
                 <p className="text-xs text-muted font-mono">Auto-update status when focusing</p>
               </div>
             </div>
-            <Button 
-              variant={slackConnected ? "secondary" : "primary"}
-              onClick={() => setSlackConnected(!slackConnected)}
-            >
-              {slackConnected ? "Disconnect" : "Connect"}
+          </div>
+          
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-mono text-text block mb-2">User OAuth Token</label>
+              <input
+                type="password"
+                value={slackToken}
+                onChange={(e) => setSlackToken(e.target.value)}
+                placeholder="xoxp-..."
+                className="w-full bg-surface2 border border-border rounded-lg px-4 py-2 text-sm text-text outline-none focus:border-accent font-mono transition-colors"
+              />
+              <p className="text-xs text-muted mt-2 font-mono">
+                Create a Slack app in your workspace and add the <strong>users.profile:write</strong> scope to get your User OAuth Token.
+              </p>
+            </div>
+
+            {slackToken && (
+              <div className="flex items-center gap-2 text-sm font-mono text-muted bg-surface2 p-3 rounded-lg border border-border/50">
+                Preview: <span className="text-text">🔴 In a Focus Session</span>
+              </div>
+            )}
+            
+            <Button onClick={handleSave} disabled={saving}>
+              {saving ? "Saving..." : "Save Slack Token"}
             </Button>
           </div>
-          {slackConnected && (
-            <div className="flex items-center gap-2 text-sm font-mono text-muted bg-surface2 p-3 rounded-lg border border-border/50">
-              Preview: <span className="text-text">⚡ In flow — back at 14:30</span>
-            </div>
-          )}
         </Card>
 
         {/* Focus Defaults */}

@@ -63,6 +63,7 @@ export const updateSettings = mutation({
     userId: v.any(),
     defaultSessionMins: v.optional(v.number()),
     defaultTotalSessions: v.optional(v.number()),
+    slackToken: v.optional(v.string()),
   },
   handler: async (ctx: any, args: any) => {
     const user = await ctx.db
@@ -74,6 +75,7 @@ export const updateSettings = mutation({
     await ctx.db.patch(user._id, {
       defaultSessionMins: args.defaultSessionMins,
       defaultTotalSessions: args.defaultTotalSessions,
+      slackToken: args.slackToken,
     });
   },
 });
