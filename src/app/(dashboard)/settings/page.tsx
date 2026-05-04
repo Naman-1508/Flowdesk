@@ -4,8 +4,8 @@ import { useSession, signOut } from "next-auth/react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { GitBranch, MessageSquare, Trash2, Bell, Keyboard, Clock } from "lucide-react";
-import { useState } from "react";
-import { useMutation } from "convex/react";
+import { useState, useEffect } from "react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "@convex/_generated/api";
 
 export default function SettingsPage() {
@@ -20,7 +20,6 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
 
   // Sync state with DB when user loads
-  import { useEffect } from "react";
   useEffect(() => {
     if (user) {
       if (user.defaultSessionMins) setDefaultSessionMins(user.defaultSessionMins);
