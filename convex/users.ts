@@ -33,14 +33,20 @@ export const getUser = query({
   args: { userId: v.optional(v.any()) },
   handler: async (ctx: any, args: any) => {
     if (!args.userId) return null;
-    return await ctx.db.get(args.userId);
+    return await ctx.db
+      .query("users")
+      .withIndex("by_githubId", (q: any) => q.eq("githubId", args.userId))
+      .first();
   },
 });
 
 export const updateStreak = mutation({
   args: { userId: v.any() },
   handler: async (ctx: any, args: any) => {
-    const user = await ctx.db.get(args.userId);
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_githubId", (q: any) => q.eq("githubId", args.userId))
+      .first();
     if (!user) return;
     const now = Date.now();
     const lastSession = user.lastSessionAt ?? 0;
@@ -48,7 +54,7 @@ export const updateStreak = mutation({
     let newStreak = user.streakCount;
     if (hoursSince > 48) newStreak = 1;
     else if (hoursSince > 20) newStreak = user.streakCount + 1;
-    await ctx.db.patch(args.userId, { streakCount: newStreak, lastSessionAt: now });
+    await ctx.db.patch(user._id, { streakCount: newStreak, lastSessionAt: now });
   },
 });
 
@@ -59,7 +65,13 @@ export const updateSettings = mutation({
     defaultTotalSessions: v.optional(v.number()),
   },
   handler: async (ctx: any, args: any) => {
-    await ctx.db.patch(args.userId, {
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_githubId", (q: any) => q.eq("githubId", args.userId))
+      .first();
+    if (!user) return;
+    
+    await ctx.db.patch(user._id, {
       defaultSessionMins: args.defaultSessionMins,
       defaultTotalSessions: args.defaultTotalSessions,
     });

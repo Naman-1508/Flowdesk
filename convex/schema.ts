@@ -15,7 +15,7 @@ export default defineSchema({
   }).index("by_githubId", ["githubId"]),
 
   sessions: defineTable({
-    userId: v.id("users"),
+    userId: v.string(),
     issueId: v.string(),
     issueTitle: v.string(),
     repoName: v.string(),
@@ -32,7 +32,7 @@ export default defineSchema({
     .index("by_userId_completedAt", ["userId", "completedAt"]),
 
   notes: defineTable({
-    userId: v.id("users"),
+    userId: v.string(),
     issueId: v.string(),
     content: v.string(),
     updatedAt: v.number(),
