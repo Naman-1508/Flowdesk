@@ -4,10 +4,20 @@ import { signIn } from "next-auth/react";
 import { motion, useMotionTemplate, useMotionValue } from "framer-motion";
 import { GitBranch } from "lucide-react";
 import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 
 export default function LoginPage() {
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
+  const { data: session, status } = useSession();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      router.push("/dashboard");
+    }
+  }, [status, router]);
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
